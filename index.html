@@ -35,11 +35,12 @@
 
     /* NAV */
     .nav { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
-    .game-title { font-family: 'Bebas Neue', sans-serif; font-size: 26px; letter-spacing: .08em; color: #1c3f8a; line-height: 1; }
-    body.dark .game-title { color: #7baaf8; }
-    .nav-btns { display: flex; gap: 8px; }
+    .game-title { font-family: 'Bebas Neue', sans-serif; font-size: 41px; letter-spacing: .08em; color: #1c3f8a; line-height: 1; display: block; transform: translateY(3px); }
 
-    .icon-btn { width: 36px; height: 36px; border-radius: 50%; border: 1.5px solid #b8c4d8; background: #ffffff; cursor: pointer; color: #374151; display: flex; align-items: center; justify-content: center; font-size: 15px; transition: background .15s, border-color .15s, color .15s; }
+    body.dark .game-title { color: #7baaf8; }
+    .nav-btns { display: flex; gap: 8px; transform: translateY(1px); }
+
+    .icon-btn { width: 29px; height: 29px; border-radius: 50%; border: 1.5px solid #b8c4d8; background: #ffffff; cursor: pointer; color: #374151; display: flex; align-items: center; justify-content: center; font-size: 13px; transition: background .15s, border-color .15s, color .15s; }
     .icon-btn:hover { background: #eef0f4; }
     body.dark .icon-btn { background: #1a2640; border-color: #5070a0; color: #b8ccee; }
     body.dark .icon-btn:hover { background: #223050; }
@@ -102,7 +103,7 @@
     body.dark .log-res { color: #7baaf8; }
 
     /* TOAST */
-    .toast-bar { min-height: 20px; text-align: center; font-size: 13px; font-weight: 500; margin-bottom: 10px; color: #9ca3af; }
+    .toast-bar { min-height: 20px; text-align: center; font-size: 15px; font-weight: 600; margin-bottom: 10px; color: #9ca3af; }
     body.dark .toast-bar { color: #7898c0; }
     .toast-bar.success { color: #16a34a; }
     body.dark .toast-bar.success { color: #86efac; }
@@ -171,6 +172,17 @@
 <body>
 
 <div id="root">
+  <div class="modal-backdrop hidden" id="howToModal">
+    <div class="modal">
+      <h3>How to Play</h3>
+      <p>You have 6 numbers and a target. Combine any of your numbers using +, −, ×, and ÷ to reach the target.</p>
+      <p>Tap a number, then an operator, then another number — they combine into a new number you can keep using.</p>
+      <p>You don't need to use all six, but each number can only be used once.</p>
+      <p>Undo steps back one move at a time, and works even if you accidentally start a new game.</p>
+      <button class="modal-close" id="howToClose">Got it</button>
+    </div>
+  </div>
+
   <div class="modal-backdrop hidden" id="infoModal">
     <div class="modal">
       <h3>Large vs Small</h3>
@@ -184,6 +196,7 @@
   <div class="nav">
     <span class="game-title">Only the Numbers</span>
     <div class="nav-btns">
+      <button class="icon-btn" id="howToBtn" aria-label="How to play"><i class="ti ti-question-mark"></i></button>
       <button class="icon-btn" id="timerToggleBtn" aria-label="Toggle timer"><i class="ti ti-clock"></i></button>
       <button class="icon-btn" id="themeBtn" aria-label="Toggle dark mode"><i class="ti ti-moon"></i></button>
     </div>
@@ -235,12 +248,12 @@
   const LARGE=[25,50,75,100];
   const SMALL=[1,1,2,2,3,3,4,4,5,5,6,6,7,7,8,8,9,9,10,10];
   let puzzleNums=[],target=0,solved=false,solShown=false;
-  let timerInt=null,timeLeft=30,dark=false,timerVisible=false;
+  let timerInt=null,timeLeft=30,dark=true,timerVisible=false;
   let nums=[],selA=null,selOp=null,steps=[],history=[],ctr=0;
   let numLarge=2;
 
   function shuffle(a){a=[...a];for(let i=a.length-1;i>0;i--){const j=Math.random()*(i+1)|0;[a[i],a[j]]=[a[j],a[i]];}return a;}
-  function snap(){return JSON.parse(JSON.stringify({nums,selA,selOp,steps}));}
+  function snap(){return JSON.parse(JSON.stringify({nums,selA,selOp,steps,puzzleNums,target,ctr,solved,solShown}));}
   function pushHistory(){history.push(snap());}
 
   function applyOp(a,b,op){
@@ -259,7 +272,7 @@
     puzzleNums=[...lg,...sm].sort((a,b)=>b-a);
     target=Math.floor(Math.random()*899)+101;
     nums=puzzleNums.map((v,i)=>({id:'t'+i,value:v,isResult:false,gone:false,expr:''}));
-    selA=null;selOp=null;steps=[];history=[];solved=false;solShown=false;ctr=0;
+    selA=null;selOp=null;steps=[];solved=false;solShown=false;ctr=0;
     document.getElementById('targetNum').textContent=target;
     document.getElementById('solBox').classList.remove('open');
     document.getElementById('solToggle').textContent='Show solution';
@@ -282,7 +295,7 @@
     document.getElementById('timerLabel').textContent=timeLeft>0?timeLeft+'s':'—';
   }
 
-  function newGame(){deal();if(timerVisible)startTimer();render();}
+  function newGame(){pushHistory();deal();if(timerVisible)startTimer();render();}
 
   function onNumTap(id){
     const n=nums.find(x=>x.id===id);if(!n||n.gone)return;
@@ -316,7 +329,18 @@
     }
   }
 
-  function undo(){if(!history.length)return;const p=history.pop();nums=p.nums;selA=p.selA;selOp=p.selOp;steps=p.steps;render();}
+  function undo(){
+    if(!history.length)return;
+    const p=history.pop();
+    nums=p.nums;selA=p.selA;selOp=p.selOp;steps=p.steps;
+    puzzleNums=p.puzzleNums;target=p.target;ctr=p.ctr;solved=p.solved;solShown=p.solShown;
+    document.getElementById('targetNum').textContent=target;
+    document.getElementById('solBox').classList.remove('open');
+    document.getElementById('solToggle').textContent='Show solution';
+    document.getElementById('toast').textContent='';
+    document.getElementById('toast').className='toast-bar';
+    render();
+  }
 
   function reset(){
     nums=puzzleNums.map((v,i)=>({id:'t'+i,value:v,isResult:false,gone:false,expr:''}));
@@ -409,6 +433,8 @@
     box.classList.add('open');document.getElementById('solToggle').textContent='Hide solution';
   }
 
+  document.getElementById('howToBtn').addEventListener('click',()=>document.getElementById('howToModal').classList.remove('hidden'));
+  document.getElementById('howToClose').addEventListener('click',()=>document.getElementById('howToModal').classList.add('hidden'));
   document.getElementById('timerToggleBtn').addEventListener('click',()=>{
     timerVisible=!timerVisible;
     document.getElementById('timerBarWrap').classList.toggle('visible',timerVisible);
@@ -436,6 +462,10 @@
   });
 
   updateLargeSub();
+  // Start in dark mode
+  document.body.classList.add('dark');
+  document.getElementById('themeBtn').innerHTML='<i class="ti ti-sun"></i>';
+  document.getElementById('themeColorMeta').setAttribute('content','#0d1829');
   newGame();
 })();
 </script>
