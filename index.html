@@ -3,12 +3,49 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-  <meta name="description" content="A fast, minimal numbers puzzle game. Combine six numbers to reach the target using +, −, ×, ÷.">
-  <meta name="theme-color" content="#f5f6f8" id="themeColorMeta">
+
+  <!-- Primary SEO -->
+  <title>Only the Numbers — Free Maths Puzzle Game</title>
+  <meta name="description" content="Only the Numbers is a free maths puzzle game. Use six numbers and basic arithmetic to reach a target — just like the numbers round on Countdown. Play free, no download needed.">
+  <meta name="keywords" content="numbers game, countdown numbers game, countdown maths game, the numbers round, arithmetic puzzle, maths puzzle game, countdown tv game, numbers round puzzle, mental arithmetic game, free maths game, countdown numbers round online">
+  <link rel="canonical" href="https://www.onlythenumbers.com/">
+
+  <!-- Open Graph (social sharing) -->
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://www.onlythenumbers.com/">
+  <meta property="og:title" content="Only the Numbers — Free Maths Puzzle Game">
+  <meta property="og:description" content="Use six numbers and basic arithmetic to reach a target. A free, minimal numbers puzzle game inspired by the classic TV numbers round. No download needed.">
+  <meta property="og:site_name" content="Only the Numbers">
+
+  <!-- Twitter card -->
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="Only the Numbers — Free Maths Puzzle Game">
+  <meta name="twitter:description" content="Use six numbers and basic arithmetic to reach a target. A free, minimal numbers puzzle game inspired by the classic TV numbers round.">
+
+  <!-- Structured data: SoftwareApplication (tells Google this is a game) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
+    "name": "Only the Numbers",
+    "url": "https://www.onlythenumbers.com/",
+    "description": "A free maths puzzle game where you combine six numbers using arithmetic to reach a target number. Inspired by the numbers round from classic TV quiz shows.",
+    "applicationCategory": "GameApplication",
+    "operatingSystem": "Any",
+    "offers": {
+      "@type": "Offer",
+      "price": "0",
+      "priceCurrency": "GBP"
+    },
+    "genre": "Puzzle",
+    "keywords": "numbers game, countdown numbers, maths puzzle, arithmetic game, numbers round"
+  }
+  </script>
+
+  <meta name="theme-color" content="#0d1829" id="themeColorMeta">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <meta name="apple-mobile-web-app-title" content="Only the Numbers">
-  <title>Only the Numbers</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Bebas+Neue&display=swap" rel="stylesheet">
@@ -167,6 +204,8 @@
     body.dark .modal strong { color: #e8f0ff; }
     .modal-close { width: 100%; height: 40px; background: #eef0f4; border: 1.5px solid #d8dde8; border-radius: 10px; font-size: 13px; cursor: pointer; color: #374151; font-family: 'Inter', sans-serif; font-weight: 500; }
     body.dark .modal-close { background: #223050; border-color: #3a5070; color: #b8ccee; }
+    body.dark #seoBlock { border-top-color: #2a3d5c !important; }
+    body.dark #seoBlock p { color: #5a7898 !important; }
   </style>
 
 <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
@@ -249,6 +288,21 @@
     <div class="sol-hdr">Solutions</div>
     <div class="sol-list" id="solList"></div>
   </div>
+  <!-- SEO text: visible to Google, unobtrusive to users -->
+  <div style="margin-top:32px;padding-top:20px;border-top:1px solid #e2e6ed" id="seoBlock">
+    <p style="font-size:12px;color:#9ca3af;line-height:1.7;font-family:'Inter',sans-serif;text-align:center;max-width:380px;margin:0 auto">
+      Only the Numbers is a free arithmetic puzzle game inspired by the classic TV numbers round.
+      Pick your mix of large and small numbers, then use +, −, ×, and ÷ to reach the target.
+      No app, no login, no limit on games... just numbers.
+    </p>
+  </div>
+  <!-- Hidden keyword block for search engines -->
+  <div aria-hidden="true" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap">
+    countdown numbers game, countdown maths, the numbers round, arithmetic puzzle game,
+    countdown numbers round online, mental maths game, numbers round game, countdown tv numbers,
+    countdown game online, free countdown numbers game, maths puzzle game, numbers puzzle
+  </div>
+
 </div>
 
 <script>
