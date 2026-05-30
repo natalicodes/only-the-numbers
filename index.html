@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="description" content="A fast, minimal numbers puzzle game. Combine six numbers to reach the target using +, −, ×, ÷.">
+  <meta name="theme-color" content="#f5f6f8" id="themeColorMeta">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="Only the Numbers">
+  <title>Only the Numbers</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Bebas+Neue&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html { height: 100%; }
+
+    body {
+      background: #f5f6f8;
+      min-height: 100%;
+      transition: background .25s;
+    }
+    body.dark { background: #0d1829; }
+
+    #root {
+      font-family: 'Inter', sans-serif;
+      padding: 20px 16px 40px;
+      max-width: 460px;
+      margin: 0 auto;
+      position: relative;
+    }
+
+    /* NAV */
+    .nav { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+    .game-title { font-family: 'Bebas Neue', sans-serif; font-size: 26px; letter-spacing: .08em; color: #1c3f8a; line-height: 1; }
+    body.dark .game-title { color: #7baaf8; }
+    .nav-btns { display: flex; gap: 8px; }
+
+    .icon-btn { width: 36px; height: 36px; border-radius: 50%; border: 1.5px solid #b8c4d8; background: #ffffff; cursor: pointer; color: #374151; display: flex; align-items: center; justify-content: center; font-size: 15px; transition: background .15s, border-color .15s, color .15s; }
+    .icon-btn:hover { background: #eef0f4; }
+    body.dark .icon-btn { background: #1a2640; border-color: #5070a0; color: #b8ccee; }
+    body.dark .icon-btn:hover { background: #223050; }
+    .icon-btn.timer-on { background: #1c3f8a; border-color: #1c3f8a; color: #fff; }
+    body.dark .icon-btn.timer-on { background: #7baaf8; border-color: #7baaf8; color: #0d1829; }
+
+    /* TIMER */
+    .timer-bar-wrap { margin-bottom: 14px; display: none; }
+    .timer-bar-wrap.visible { display: block; }
+    .timer-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; }
+    .timer-label { font-size: 11px; color: #9ca3af; font-weight: 500; }
+    body.dark .timer-label { color: #7898c0; }
+    .timer-bar { height: 3px; background: #d8dde8; border-radius: 2px; overflow: hidden; }
+    body.dark .timer-bar { background: #2a3d5c; }
+    .timer-fill { height: 100%; border-radius: 2px; background: #16a34a; transition: width 1s linear, background .5s; }
+    .timer-fill.warn { background: #dc2626; }
+    body.dark .timer-fill.warn { background: #fca5a5; }
+
+    /* TARGET */
+    .target-card { background: #1c3f8a; border-radius: 16px; padding: 18px 0 14px; text-align: center; margin-bottom: 20px; }
+    body.dark .target-card { background: #1a2640; }
+    .target-label { font-size: 10px; letter-spacing: .18em; text-transform: uppercase; color: rgba(255,255,255,.5); margin-bottom: 4px; font-weight: 600; }
+    body.dark .target-label { color: #7898c0; }
+    .target-num { font-family: 'Bebas Neue', sans-serif; font-size: 68px; color: #ffffff; line-height: 1; letter-spacing: .03em; }
+    body.dark .target-num { color: #e8f0ff; }
+
+    /* BANK */
+    .bank { display: grid; gap: 8px; margin-bottom: 20px; width: 100%; }
+    .num-tile { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 68px; border-radius: 12px; cursor: pointer; border: 1.5px solid #d8dde8; background: #ffffff; color: #111827; transition: border-color .12s, background .12s, color .12s; user-select: none; -webkit-tap-highlight-color: transparent; overflow: hidden; padding: 0 4px; min-width: 0; }
+    .num-tile:active { background: #eef0f4; }
+    body.dark .num-tile { background: #1a2640; border-color: #3a5070; color: #e8f0ff; }
+    body.dark .num-tile:active { background: #223050; }
+    .num-tile .tile-val { font-family: 'Bebas Neue', sans-serif; font-size: clamp(18px, 4.5vw, 30px); line-height: 1; letter-spacing: .02em; }
+    .num-tile .tile-sub { font-size: clamp(7px, 1.5vw, 9px); color: #9ca3af; font-weight: 500; margin-top: 2px; width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-align: center; }
+    body.dark .num-tile .tile-sub { color: #7898c0; }
+    .num-tile.sel { border-color: #1c3f8a; border-width: 2px; background: #e8eef8; color: #1c3f8a; }
+    body.dark .num-tile.sel { border-color: #7baaf8; background: #1e2f50; color: #7baaf8; }
+
+    /* OPS */
+    .op-strip { display: flex; gap: 8px; justify-content: center; margin-bottom: 20px; }
+    .op-tile { display: flex; align-items: center; justify-content: center; width: 66px; height: 56px; border-radius: 12px; font-family: 'Bebas Neue', sans-serif; font-size: 28px; cursor: pointer; border: 1.5px solid #d8dde8; background: #ffffff; color: #4b5563; transition: border-color .12s, background .12s, color .12s, opacity .15s; user-select: none; -webkit-tap-highlight-color: transparent; }
+    .op-tile:active { background: #eef0f4; }
+    body.dark .op-tile { background: #1a2640; border-color: #3a5070; color: #b8ccee; }
+    body.dark .op-tile:active { background: #223050; }
+    .op-tile.ready { border-color: #b8c4d8; color: #1c3f8a; }
+    body.dark .op-tile.ready { border-color: #5070a0; color: #7baaf8; }
+    .op-tile.sel { background: #1c3f8a; border-color: #1c3f8a; color: #ffffff; }
+    body.dark .op-tile.sel { background: #7baaf8; border-color: #7baaf8; color: #0d1829; }
+    .op-tile.dim { opacity: .28; pointer-events: none; }
+
+    /* LOG */
+    .log { margin-bottom: 12px; display: flex; flex-direction: column; gap: 4px; }
+    .log-item { font-size: 13px; color: #374151; display: flex; gap: 6px; align-items: baseline; }
+    body.dark .log-item { color: #b8ccee; }
+    .log-n { font-size: 11px; color: #9ca3af; min-width: 14px; }
+    body.dark .log-n { color: #7898c0; }
+    .log-expr { color: #111827; font-weight: 500; }
+    body.dark .log-expr { color: #e8f0ff; }
+    .log-res { font-weight: 600; color: #1c3f8a; }
+    body.dark .log-res { color: #7baaf8; }
+
+    /* TOAST */
+    .toast-bar { min-height: 20px; text-align: center; font-size: 13px; font-weight: 500; margin-bottom: 10px; color: #9ca3af; }
+    body.dark .toast-bar { color: #7898c0; }
+    .toast-bar.success { color: #16a34a; }
+    body.dark .toast-bar.success { color: #86efac; }
+    .toast-bar.error { color: #dc2626; }
+    body.dark .toast-bar.error { color: #fca5a5; }
+    .toast-bar.info { color: #1c3f8a; }
+    body.dark .toast-bar.info { color: #7baaf8; }
+
+    /* ACTIONS */
+    .actions { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-bottom: 14px; }
+    .act-btn { height: 42px; background: #ffffff; border: 1.5px solid #d8dde8; border-radius: 10px; font-size: 13px; cursor: pointer; color: #374151; font-family: 'Inter', sans-serif; font-weight: 500; transition: background .12s, border-color .12s, color .15s; }
+    .act-btn:hover { background: #eef0f4; }
+    body.dark .act-btn { background: #1a2640; border-color: #3a5070; color: #b8ccee; }
+    body.dark .act-btn:hover { background: #223050; }
+    .act-btn.primary { border-color: #1c3f8a; color: #1c3f8a; background: #e8eef8; }
+    body.dark .act-btn.primary { border-color: #7baaf8; color: #7baaf8; background: #1e2f50; }
+    .act-btn.danger { border-color: #dc2626; color: #dc2626; background: #ffffff; }
+    body.dark .act-btn.danger { border-color: #fca5a5; color: #fca5a5; background: #1a2640; }
+
+    .new-game-wrap { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+    .large-sub { display: inline-flex; align-items: center; gap: 4px; cursor: pointer; user-select: none; -webkit-tap-highlight-color: transparent; padding: 3px 9px; border-radius: 20px; border: 1.5px solid #d8dde8; background: #ffffff; transition: background .12s, border-color .12s; font-family: 'Inter', sans-serif; }
+    .large-sub:hover { background: #eef0f4; border-color: #b8c4d8; }
+    body.dark .large-sub { background: #1a2640; border-color: #3a5070; }
+    body.dark .large-sub:hover { background: #223050; border-color: #5070a0; }
+    .large-sub-text { font-size: 11px; color: #374151; font-weight: 500; }
+    body.dark .large-sub-text { color: #b8ccee; }
+    .large-sub-val { font-weight: 600; color: #1c3f8a; }
+    body.dark .large-sub-val { color: #7baaf8; }
+    .info-btn { display: inline-flex; align-items: center; justify-content: center; width: 14px; height: 14px; border-radius: 50%; border: 1px solid #b8c4d8; font-size: 9px; color: #9ca3af; cursor: pointer; background: transparent; font-family: 'Inter', sans-serif; line-height: 1; }
+    body.dark .info-btn { border-color: #5070a0; color: #7898c0; }
+
+    /* SOLUTION */
+    .sol-toggle { width: 100%; height: 40px; background: #ffffff; border: 1.5px solid #d8dde8; border-radius: 10px; font-size: 13px; cursor: pointer; color: #374151; margin-bottom: 8px; font-family: 'Inter', sans-serif; font-weight: 500; transition: background .12s; }
+    .sol-toggle:hover { background: #eef0f4; }
+    body.dark .sol-toggle { background: #1a2640; border-color: #3a5070; color: #b8ccee; }
+    body.dark .sol-toggle:hover { background: #223050; }
+    .sol-box { display: none; background: #ffffff; border: 1.5px solid #d8dde8; border-radius: 12px; }
+    .sol-box.open { display: block; }
+    body.dark .sol-box { background: #1a2640; border-color: #3a5070; }
+    .sol-hdr { padding: 9px 13px; font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: #9ca3af; border-bottom: 1px solid #d8dde8; font-weight: 600; }
+    body.dark .sol-hdr { color: #7898c0; border-bottom-color: #2a3d5c; }
+    .sol-list { padding: 10px 13px; display: flex; flex-direction: column; gap: 10px; }
+    .sol-item { font-size: 13px; color: #374151; line-height: 1.8; font-family: 'DM Mono', monospace; }
+    body.dark .sol-item { color: #b8ccee; }
+    .sol-item.player-sol { background: #e8eef8; border: 1.5px solid #1c3f8a; border-radius: 8px; padding: 8px 12px; color: #1c3f8a; }
+    body.dark .sol-item.player-sol { background: #1e2f50; border-color: #7baaf8; color: #7baaf8; }
+    .sol-tag { font-size: 10px; font-family: 'Inter', sans-serif; letter-spacing: .08em; text-transform: uppercase; color: #9ca3af; display: block; margin-bottom: 4px; font-weight: 600; }
+    body.dark .sol-tag { color: #7898c0; }
+
+    /* MODAL */
+    .modal-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,.5); display: flex; align-items: center; justify-content: center; z-index: 100; padding: 20px; }
+    .modal-backdrop.hidden { display: none; }
+    .modal { background: #ffffff; border: 1.5px solid #d8dde8; border-radius: 16px; padding: 22px; max-width: 320px; width: 100%; }
+    body.dark .modal { background: #1a2640; border-color: #3a5070; }
+    .modal h3 { font-family: 'Bebas Neue', sans-serif; font-size: 22px; letter-spacing: .06em; color: #1c3f8a; margin-bottom: 10px; }
+    body.dark .modal h3 { color: #7baaf8; }
+    .modal p { font-size: 13px; color: #374151; line-height: 1.65; margin-bottom: 8px; }
+    body.dark .modal p { color: #b8ccee; }
+    .modal p:last-of-type { margin-bottom: 16px; }
+    .modal strong { color: #111827; font-weight: 600; }
+    body.dark .modal strong { color: #e8f0ff; }
+    .modal-close { width: 100%; height: 40px; background: #eef0f4; border: 1.5px solid #d8dde8; border-radius: 10px; font-size: 13px; cursor: pointer; color: #374151; font-family: 'Inter', sans-serif; font-weight: 500; }
+    body.dark .modal-close { background: #223050; border-color: #3a5070; color: #b8ccee; }
+  </style>
+</head>
+<body>
+
+<div id="root">
+  <div class="modal-backdrop hidden" id="infoModal">
+    <div class="modal">
+      <h3>Large vs Small</h3>
+      <p><strong>Large numbers</strong> are 25, 50, 75, and 100. <strong>Small numbers</strong> are 1 through 10, with duplicates possible.</p>
+      <p>You always get 6 numbers total. More large numbers give you bigger building blocks, but fewer small ones to fine-tune with — it's a trade-off.</p>
+      <p>The classic mix is 2 large, 4 small. All large (4) is a serious challenge. All small (0) can be surprisingly tricky too.</p>
+      <button class="modal-close" id="infoClose">Got it</button>
+    </div>
+  </div>
+
+  <div class="nav">
+    <span class="game-title">Only the Numbers</span>
+    <div class="nav-btns">
+      <button class="icon-btn" id="timerToggleBtn" aria-label="Toggle timer"><i class="ti ti-clock"></i></button>
+      <button class="icon-btn" id="themeBtn" aria-label="Toggle dark mode"><i class="ti ti-moon"></i></button>
+    </div>
+  </div>
+
+  <div id="timerBarWrap" class="timer-bar-wrap">
+    <div class="timer-row"><span class="timer-label" id="timerLabel">30s</span></div>
+    <div class="timer-bar"><div class="timer-fill" id="timerFill" style="width:100%"></div></div>
+  </div>
+
+  <div class="target-card">
+    <div class="target-label">Target</div>
+    <div class="target-num" id="targetNum">—</div>
+  </div>
+
+  <div class="bank" id="bank"></div>
+
+  <div class="op-strip" id="opStrip">
+    <div class="op-tile dim" data-op="+">+</div>
+    <div class="op-tile dim" data-op="−">−</div>
+    <div class="op-tile dim" data-op="×">×</div>
+    <div class="op-tile dim" data-op="÷">÷</div>
+  </div>
+
+  <div class="log" id="log"></div>
+  <div class="toast-bar" id="toast"></div>
+
+  <div class="actions">
+    <div class="new-game-wrap">
+      <button class="act-btn primary" id="newGameBtn" style="width:100%"><i class="ti ti-refresh"></i> New game</button>
+      <div class="large-sub" id="largeSub">
+        <span class="large-sub-text"><span class="large-sub-val" id="largeVal">2</span> large</span>
+        <button class="info-btn" id="infoBtn" aria-label="What are large numbers?">?</button>
+      </div>
+    </div>
+    <button class="act-btn danger" id="resetBtn">Reset</button>
+    <button class="act-btn" id="undoBtn"><i class="ti ti-arrow-back-up"></i> Undo</button>
+  </div>
+
+  <button class="sol-toggle" id="solToggle">Show solution</button>
+  <div class="sol-box" id="solBox">
+    <div class="sol-hdr">Solutions</div>
+    <div class="sol-list" id="solList"></div>
+  </div>
+</div>
+
+<script>
+(function(){
+  const LARGE=[25,50,75,100];
+  const SMALL=[1,1,2,2,3,3,4,4,5,5,6,6,7,7,8,8,9,9,10,10];
+  let puzzleNums=[],target=0,solved=false,solShown=false;
+  let timerInt=null,timeLeft=30,dark=false,timerVisible=false;
+  let nums=[],selA=null,selOp=null,steps=[],history=[],ctr=0;
+  let numLarge=2;
+
+  function shuffle(a){a=[...a];for(let i=a.length-1;i>0;i--){const j=Math.random()*(i+1)|0;[a[i],a[j]]=[a[j],a[i]];}return a;}
+  function snap(){return JSON.parse(JSON.stringify({nums,selA,selOp,steps}));}
+  function pushHistory(){history.push(snap());}
+
+  function applyOp(a,b,op){
+    let r;
+    if(op==='+')r=a+b;else if(op==='−')r=a-b;else if(op==='×')r=a*b;
+    else if(op==='÷'){if(!b||a%b!==0)return null;r=a/b;}
+    if(r===null||r<=0||!Number.isInteger(r))return null;
+    return r;
+  }
+
+  function updateLargeSub(){document.getElementById('largeVal').textContent=numLarge;}
+
+  function deal(){
+    const lg=shuffle(LARGE).slice(0,numLarge);
+    const sm=shuffle(SMALL).slice(0,6-numLarge);
+    puzzleNums=[...lg,...sm].sort((a,b)=>b-a);
+    target=Math.floor(Math.random()*899)+101;
+    nums=puzzleNums.map((v,i)=>({id:'t'+i,value:v,isResult:false,gone:false,expr:''}));
+    selA=null;selOp=null;steps=[];history=[];solved=false;solShown=false;ctr=0;
+    document.getElementById('targetNum').textContent=target;
+    document.getElementById('solBox').classList.remove('open');
+    document.getElementById('solToggle').textContent='Show solution';
+    document.getElementById('toast').textContent='';
+    document.getElementById('toast').className='toast-bar';
+  }
+
+  function startTimer(){
+    clearInterval(timerInt);
+    if(!timerVisible)return;
+    timeLeft=30;updateTimerUI();
+    timerInt=setInterval(()=>{timeLeft--;updateTimerUI();if(timeLeft<=0)clearInterval(timerInt);},1000);
+  }
+
+  function updateTimerUI(){
+    const pct=Math.max(0,(timeLeft/30)*100);
+    const f=document.getElementById('timerFill');
+    f.style.width=pct+'%';
+    f.classList.toggle('warn',timeLeft<=8&&timeLeft>0);
+    document.getElementById('timerLabel').textContent=timeLeft>0?timeLeft+'s':'—';
+  }
+
+  function newGame(){deal();if(timerVisible)startTimer();render();}
+
+  function onNumTap(id){
+    const n=nums.find(x=>x.id===id);if(!n||n.gone)return;
+    if(selA===id){selA=null;selOp=null;render();return;}
+    if(!selA){selA=id;selOp=null;render();}
+    else if(selOp){commit(selA,selOp,id);}
+    else{selA=id;render();}
+  }
+
+  function onOpTap(op){if(!selA)return;selOp=(selOp===op)?null:op;render();}
+
+  function commit(aId,op,bId){
+    const a=nums.find(x=>x.id===aId),b=nums.find(x=>x.id===bId);
+    if(!a||!b)return;
+    const r=applyOp(a.value,b.value,op);
+    if(r===null){showToast('Invalid — must give a positive whole number','error');return;}
+    pushHistory();
+    const newId='r'+(ctr++);
+    const expr=`${a.value} ${op} ${b.value}`;
+    steps.push({expr,result:r});
+    a.gone=true;b.gone=true;
+    nums.push({id:newId,value:r,isResult:true,gone:false,expr});
+    selA=newId;selOp=null;render();
+    const alive=nums.filter(x=>!x.gone);
+    if(!solved&&alive.some(x=>x.value===target)){
+      solved=true;clearInterval(timerInt);showToast('Solved!','success');
+    } else {
+      const closest=alive.reduce((best,x)=>Math.abs(x.value-target)<Math.abs(best.value-target)?x:best,alive[0]);
+      const diff=Math.abs(closest.value-target);
+      if(diff<=10&&diff>0)showToast('Close — off by '+diff,'info');
+    }
+  }
+
+  function undo(){if(!history.length)return;const p=history.pop();nums=p.nums;selA=p.selA;selOp=p.selOp;steps=p.steps;render();}
+
+  function reset(){
+    nums=puzzleNums.map((v,i)=>({id:'t'+i,value:v,isResult:false,gone:false,expr:''}));
+    selA=null;selOp=null;steps=[];history=[];solved=false;
+    document.getElementById('toast').textContent='';document.getElementById('toast').className='toast-bar';
+    render();if(timerVisible)startTimer();
+  }
+
+  function render(){renderBank();renderOps();renderLog();}
+
+  function renderBank(){
+    const bank=document.getElementById('bank');bank.innerHTML='';
+    const alive=nums.filter(x=>!x.gone);
+    bank.style.gridTemplateColumns=`repeat(${alive.length},1fr)`;
+    alive.forEach(n=>{
+      const el=document.createElement('div');
+      el.className='num-tile'+(n.id===selA?' sel':'');
+      const val=document.createElement('div');val.className='tile-val';val.textContent=n.value;el.appendChild(val);
+      if(n.isResult&&n.expr){const sub=document.createElement('div');sub.className='tile-sub';sub.textContent=n.expr;el.appendChild(sub);}
+      el.addEventListener('click',()=>onNumTap(n.id));
+      bank.appendChild(el);
+    });
+  }
+
+  function renderOps(){
+    const hasA=!!selA;
+    document.querySelectorAll('.op-tile').forEach(el=>{
+      el.className='op-tile';
+      if(!hasA)el.classList.add('dim');
+      else if(selOp===el.dataset.op)el.classList.add('sel');
+      else el.classList.add('ready');
+    });
+  }
+
+  function renderLog(){
+    const log=document.getElementById('log');log.innerHTML='';
+    steps.forEach((s,i)=>{
+      const d=document.createElement('div');d.className='log-item';
+      d.innerHTML=`<span class="log-n">${i+1}.</span><span class="log-expr">${s.expr}</span><span style="opacity:.4;margin:0 2px">=</span><span class="log-res">${s.result}</span>`;
+      log.appendChild(d);
+    });
+  }
+
+  function showToast(msg,type){const t=document.getElementById('toast');t.textContent=msg;t.className='toast-bar '+(type||'');}
+
+  function solve(ns,tgt){
+    const sols=[];
+    function s(arr,st){
+      if(sols.length>=4)return;
+      for(let i=0;i<arr.length;i++)for(let j=0;j<arr.length;j++){
+        if(i===j||sols.length>=4)continue;
+        const a=arr[i],b=arr[j],rest=arr.filter((_,k)=>k!==i&&k!==j);
+        const cs=[{v:a+b,e:`${a} + ${b}`},{v:a-b,e:`${a} − ${b}`},{v:b-a,e:`${b} − ${a}`},{v:a*b,e:`${a} × ${b}`}];
+        if(b&&a%b===0)cs.push({v:a/b,e:`${a} ÷ ${b}`});
+        if(a&&b%a===0)cs.push({v:b/a,e:`${b} ÷ ${a}`});
+        for(const c of cs){
+          if(!c.v||c.v<=0||!Number.isInteger(c.v))continue;
+          const ns2=[...st,{expr:c.e,result:c.v}];
+          if(c.v===tgt){sols.push(ns2);break;}
+          if(rest.length&&sols.length<4)s([c.v,...rest],ns2);
+        }
+      }
+    }
+    s(ns,[]);return sols;
+  }
+
+  function showSolutions(){
+    const box=document.getElementById('solBox');
+    if(solShown){box.classList.toggle('open');document.getElementById('solToggle').textContent=box.classList.contains('open')?'Hide solution':'Show solution';return;}
+    solShown=true;
+    const sols=solve(puzzleNums,target);
+    const list=document.getElementById('solList');list.innerHTML='';
+    const ps=solved&&steps.length>0;
+    if(ps){
+      const d=document.createElement('div');d.className='sol-item player-sol';
+      const tag=document.createElement('span');tag.className='sol-tag';tag.textContent='Your solution';d.appendChild(tag);
+      steps.forEach(s=>{const l=document.createElement('div');l.textContent=`${s.expr} = ${s.result}`;d.appendChild(l);});
+      list.appendChild(d);
+    }
+    if(!sols.length){
+      const d=document.createElement('div');d.className='sol-item';d.style.fontFamily='inherit';d.textContent='No exact solution found.';list.appendChild(d);
+    } else {
+      sols.forEach(stps=>{
+        if(ps&&stps.length===steps.length&&stps.every((s,i)=>s.expr===steps[i].expr))return;
+        const d=document.createElement('div');d.className='sol-item';
+        stps.forEach(s=>{const l=document.createElement('div');l.textContent=`${s.expr} = ${s.result}`;d.appendChild(l);});
+        list.appendChild(d);
+      });
+    }
+    box.classList.add('open');document.getElementById('solToggle').textContent='Hide solution';
+  }
+
+  document.getElementById('timerToggleBtn').addEventListener('click',()=>{
+    timerVisible=!timerVisible;
+    document.getElementById('timerBarWrap').classList.toggle('visible',timerVisible);
+    document.getElementById('timerToggleBtn').classList.toggle('timer-on',timerVisible);
+    if(timerVisible)startTimer(); else clearInterval(timerInt);
+  });
+  document.getElementById('largeSub').addEventListener('click',e=>{
+    if(e.target.closest('#infoBtn'))return;
+    numLarge=(numLarge+1)%5;updateLargeSub();
+  });
+  document.getElementById('infoBtn').addEventListener('click',()=>document.getElementById('infoModal').classList.remove('hidden'));
+  document.getElementById('infoClose').addEventListener('click',()=>document.getElementById('infoModal').classList.add('hidden'));
+  document.getElementById('opStrip').addEventListener('click',e=>{
+    const el=e.target.closest('.op-tile');if(el&&!el.classList.contains('dim'))onOpTap(el.dataset.op);
+  });
+  document.getElementById('undoBtn').addEventListener('click',undo);
+  document.getElementById('resetBtn').addEventListener('click',reset);
+  document.getElementById('newGameBtn').addEventListener('click',newGame);
+  document.getElementById('solToggle').addEventListener('click',showSolutions);
+  document.getElementById('themeBtn').addEventListener('click',()=>{
+    dark=!dark;
+    document.getElementById('themeBtn').innerHTML=dark?'<i class="ti ti-sun"></i>':'<i class="ti ti-moon"></i>';
+    document.body.classList.toggle('dark',dark);
+    document.getElementById('themeColorMeta').setAttribute('content',dark?'#0d1829':'#f5f6f8');
+  });
+
+  updateLargeSub();
+  newGame();
+})();
+</script>
+</body>
+</html>
