@@ -404,6 +404,7 @@
     const alive=nums.filter(x=>!x.gone);
     if(!solved&&alive.some(x=>x.value===target)){
       solved=true;clearInterval(timerInt);showToast('Solved!','success');
+gtag('event','puzzle_solved',{'event_category':'engagement'});
     } else {
       const closest=alive.reduce((best,x)=>Math.abs(x.value-target)<Math.abs(best.value-target)?x:best,alive[0]);
       const diff=Math.abs(closest.value-target);
@@ -534,8 +535,14 @@
   });
   document.getElementById('undoBtn').addEventListener('click',undo);
   document.getElementById('resetBtn').addEventListener('click',reset);
-  document.getElementById('newGameBtn').addEventListener('click',newGame);
-  document.getElementById('solToggle').addEventListener('click',showSolutions);
+  document.getElementById('newGameBtn').addEventListener('click',()=>{
+  gtag('event','new_game',{'event_category':'engagement'});
+  newGame();
+});
+  document.getElementById('solToggle').addEventListener('click',()=>{
+  gtag('event','show_solution',{'event_category':'engagement'});
+  showSolutions();
+});
   document.getElementById('themeBtn').addEventListener('click',()=>{
     dark=!dark;
     document.getElementById('themeBtn').innerHTML=dark?'<i class="ti ti-sun"></i>':'<i class="ti ti-moon"></i>';
